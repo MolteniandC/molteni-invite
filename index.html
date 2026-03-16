@@ -5,45 +5,66 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Molteni&C 新品發表會誠摯邀請您</title>
     <meta property="og:title" content="Molteni&C 新品發表會誠摯邀請您">
-    <meta property="og:description" content="探索義大利頂級家具設計美學，誠摯邀請您的蒞臨。">
+    <meta property="og:description" content="誠摯邀請您蒞臨，探索義大利頂級家具的設計美學。">
     <meta property="og:image" content="https://drive.google.com/thumbnail?id=1W2_5he7cACzIywjxumT-zcv6DLJHYBv2&sz=w1000">
+    <meta property="og:type" content="website">
+
     <style>
-        body { margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; background-color: #1a1a1a; touch-action: none; font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; }
+        body { margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; background-color: #1a1a1a; touch-action: none; font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; overflow: hidden; }
         .tilt-wrapper { width: 320px; height: 480px; perspective: 1000px; }
         .card-flipper { position: relative; width: 100%; height: 100%; transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; cursor: pointer; }
         .flipped { transform: rotateY(180deg); }
         .card-front, .card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 20px; overflow: hidden; box-shadow: 0 30px 60px rgba(0,0,0,0.7); }
         
-        /* 正面樣式與提示 */
+        /* 正面樣式與自定義燙銀感模擬 */
         .card-front { 
             background-image: url('https://drive.google.com/thumbnail?id=1W2_5he7cACzIywjxumT-zcv6DLJHYBv2&sz=w1000'); 
             background-size: cover; background-position: center; 
-            display: flex; align-items: flex-end; justify-content: center;
+            display: flex; flex-direction: column; justify-content: space-between; align-items: center;
+            position: relative; /* 重要：用於定位 silver-glare */
         }
+
+        /* 自定義燙銀反光層：模擬燙銀感的主角 */
+        .silver-glare { 
+            position: absolute; 
+            top: 0; left: 0; width: 100%; height: 25%; /* 定位在頂部 LOGO 區域 */
+            background: linear-gradient(135deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 30%, rgba(192,192,192,0.8) 50%, rgba(255,255,255,0.4) 70%, rgba(255,255,255,0) 100%);
+            mix-blend-mode: color-dodge; /* 混合模式，讓反光層與圖片融合，不遮擋文字 */
+            filter: blur(10px); /* 模糊，讓反光邊緣柔和 */
+            transform: translate(0,0); /* 隨手機傾斜而移動 */
+            transition: 0.1s; /* 平滑移動 */
+            pointer-events: none; /* 讓反光層不遮擋點擊 */
+        }
+
+        /* 點擊翻轉提示 */
         .flip-hint { 
             margin-bottom: 20px; padding: 5px 15px; background: rgba(0,0,0,0.4); 
             color: rgba(255,255,255,0.8); font-size: 12px; border-radius: 20px; 
             backdrop-filter: blur(5px); pointer-events: none;
         }
 
-        /* 背面樣式修正：使用指定色 #f2f0eb */
+        /* 背面樣式修正（保留所有修改） */
         .card-back { 
-            background-color: #f2f0eb; 
+            background-color: #f2f0eb; /* 指定色 #f2f0eb */
             transform: rotateY(180deg); 
             display: flex; flex-direction: column; justify-content: center; align-items: center; 
             padding: 20px; box-sizing: border-box; text-align: center; 
         }
         
+        /* 誠摯邀請：3a1b1b */
         .card-back h2 { color: #3a1b1b; margin-bottom: 10px; font-weight: 600; }
+        
+        /* Molteni&C 新品發表會：黑色 */
         .card-back p { color: #000000; margin: 5px 0; font-size: 16px; font-weight: 500; }
         
+        /* 地圖按鈕：底黑文字白 */
         .map-btn { 
             margin-top: 30px; padding: 12px 35px; background-color: #000000; color: #ffffff; 
             text-decoration: none; border-radius: 30px; font-weight: bold; transition: 0.3s;
         }
         .map-btn:hover { background-color: #333; transform: scale(1.05); }
 
-        #motion-btn { margin-top: 20px; background: none; color: #555; border: 1px solid #333; padding: 5px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; }
+        #motion-btn { margin-top: 20px; background: none; color: #555; border: 1px solid #333; padding: 5px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; display: none; /* 隱藏，整合進翻轉中 */ }
     </style>
 </head>
 <body>
@@ -51,6 +72,7 @@
     <div class="tilt-wrapper" data-tilt data-tilt-gyroscope="true" data-tilt-max="15">
         <div class="card-flipper" id="myCard" onclick="handleCardClick(event)">
             <div class="card-front">
+                <div class="silver-glare" id="silverGlare"></div>
                 <div class="flip-hint">點擊查看詳情 ↻</div>
             </div>
 
@@ -64,16 +86,33 @@
         </div>
     </div>
 
-    <button id="motion-btn" onclick="requestPermission()">開啟動態感應 (iOS)</button>
+    <button id="motion-btn" id="permissionBtn" onclick="requestPermission()">開啟動態感應 (iOS)</button>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
     <script>
         let permissionRequested = false;
+        const silverGlare = document.getElementById('silverGlare');
+
         function handleCardClick(event) {
             document.getElementById('myCard').classList.toggle('flipped');
             if (!permissionRequested && typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
                 DeviceOrientationEvent.requestPermission().then(res => { if (res == 'granted') permissionRequested = true; });
             }
+        }
+
+        // 動態燙銀感移動邏輯
+        if (window.DeviceOrientationEvent) {
+            window.addEventListener('deviceorientation', function(event) {
+                let beta = event.beta;   // -180 to 180 (前後)
+                let gamma = event.gamma; // -90 to 90 (左右)
+                
+                // 限制移動範圍
+                let moveX = (gamma / 3).toFixed(2); // 限制移動幅度
+                let moveY = (beta / 3).toFixed(2); 
+
+                // 隨卡片傾斜而「反向」移動，創造出反光流動感
+                silverGlare.style.transform = `translate(${-moveX}px, ${-moveY}px)`;
+            });
         }
     </script>
 </body>
