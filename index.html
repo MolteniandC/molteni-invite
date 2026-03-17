@@ -28,14 +28,9 @@
             border-radius: 20px;
         }
         
-        /* 核心修正：強制設定背面不可見，避免穿透 */
-        .card-front, .card-back, .flip-hint, .back-content, .map-btn {
-            backface-visibility: hidden !important;
-            -webkit-backface-visibility: hidden !important;
-        }
-
         .card-front, .card-back { 
             position: absolute; width: 100%; height: 100%; 
+            backface-visibility: hidden; -webkit-backface-visibility: hidden; 
             border-radius: 20px; overflow: hidden; 
             border: 1px solid rgba(0,0,0,0.1); box-sizing: border-box;
             transform-style: preserve-3d;
@@ -45,21 +40,31 @@
             background-image: url('https://drive.google.com/thumbnail?id=1lMKH8uIRg_9PfNW7S-MjyI7lGBXlAxZG&sz=w1000'); 
             background-size: cover; background-position: center; 
             display: flex; align-items: flex-end; justify-content: center;
-            transform: rotateY(0deg) translateZ(1px); /* 保持在最前層 */
+            transform: rotateY(0deg) translateZ(1px);
             z-index: 2;
         }
 
+        /* 改良版：金屬流光層 (預設顯示，由 JS 控制位置) */
+        .metal-sheen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 60%, rgba(255,255,255,0) 100%);
+            background-size: 300% 300%;
+            background-position: 50% 50%;
+            mix-blend-mode: overlay; pointer-events: none;
+            opacity: 0.8; /* 始終保持一點點光澤感 */
+            z-index: 1;
+        }
+
         .flip-hint { 
-            margin-bottom: 25px; padding: 8px 20px; 
-            background: #3a1b1b; color: #ffffff; 
-            font-size: 14px; border-radius: 20px; 
-            pointer-events: none;
-            transform: translateZ(10px); /* 確保提示框浮出 */
+            margin-bottom: 25px; padding: 8px 20px; background: #3a1b1b; color: #ffffff; 
+            font-size: 14px; border-radius: 20px; pointer-events: none;
+            transform: translateZ(15px); /* 確保提示框浮出，不被殘影影響 */
+            backface-visibility: hidden; -webkit-backface-visibility: hidden;
         }
 
         .card-back { 
             background-color: #f2f0eb; 
-            transform: rotateY(180deg) translateZ(1px); /* 背面基準面 */
+            transform: rotateY(180deg) translateZ(1px);
             z-index: 1;
         }
 
@@ -67,40 +72,26 @@
             width: 100%; height: 100%;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             padding: 30px; box-sizing: border-box; text-align: center;
-            transform: translateZ(5px); /* 確保內容浮在卡面上 */
+            transform: translateZ(10px);
+            backface-visibility: hidden; -webkit-backface-visibility: hidden;
         }
 
         .date-row { color: #666; font-size: 16px; letter-spacing: 1px; margin-bottom: 5px; font-weight: 500; }
         h2 { color: #3a1b1b; margin-top: 5px; margin-bottom: 12px; font-weight: 600; font-size: 22px; }
         p { color: #000000; margin: 6px 0; font-size: 16px; font-weight: 500; }
 
-        /* 地圖按鈕：增加 z-index 與 translateZ 確保點擊 */
         .map-btn { 
-            margin-top: 30px; padding: 12px 40px; 
-            background-color: #000000; color: #ffffff; 
-            text-decoration: none; border-radius: 30px; 
-            font-weight: bold; transition: 0.3s;
-            position: relative;
-            z-index: 20;
-            transform: translateZ(10px);
+            margin-top: 30px; padding: 12px 40px; background-color: #000000; color: #ffffff; 
+            text-decoration: none; border-radius: 30px; font-weight: bold; transition: 0.3s;
+            position: relative; z-index: 20; transform: translateZ(15px);
         }
-
-        /* 金屬流光 */
-        .metal-sheen {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 45%, rgba(230,230,230,0.4) 50%, rgba(255,255,255,0) 55%, rgba(255,255,255,0) 100%);
-            background-size: 300% 300%; background-position: 0% 100%;
-            mix-blend-mode: overlay; pointer-events: none; opacity: 0; transition: opacity 0.1s;
-        }
-        .sheen-active { opacity: 1; animation: metalSweep 1s forwards; }
-        @keyframes metalSweep { 0% { background-position: 0% 100%; } 100% { background-position: 100% 0%; } }
 
         #motion-btn { margin-top: 30px; background: none; color: #444; border: 1px solid #333; padding: 5px 12px; border-radius: 20px; font-size: 11px; cursor: pointer; opacity: 0.6; }
     </style>
 </head>
 <body>
 
-    <div class="tilt-wrapper" data-tilt data-tilt-gyroscope="true" data-tilt-max="12">
+    <div id="tiltEl" class="tilt-wrapper" data-tilt data-tilt-gyroscope="true" data-tilt-max="15">
         <div class="card-flipper" id="myCard" onclick="handleCardClick(event)">
             <div class="card-front">
                 <div class="metal-sheen" id="frontSheen"></div>
@@ -113,7 +104,7 @@
                     <h2>誠摯邀請</h2>
                     <p>Molteni&C 新品發表會</p>
                     <p style="font-size: 14px; color: #666; margin-top: 10px;">探索義大利經典設計</p>
-                    <a href="https://www.google.com/maps/search/?api=1&query=Molteni%26C+Flagship+Store+Taichung" target="_blank" class="map-btn" onclick="event.stopPropagation();">📍 開啟地圖導航</a>
+                    <a href="https://www.google.com/maps/search/?api=1&query=Molteni%26C+Taichung" target="_blank" class="map-btn" onclick="event.stopPropagation();">📍 開啟地圖導航</a>
                     <p style="font-size: 11px; color: #999; margin-top: 25px;">(點擊卡片再次翻轉)</p>
                 </div>
             </div>
@@ -126,15 +117,29 @@
     <script>
         let permissionRequested = false;
         let currentRotation = 0;
+        const frontSheen = document.getElementById('frontSheen');
+        const backSheen = document.getElementById('backSheen');
+        const tiltEl = document.getElementById('tiltEl');
+
+        // 監聽陀螺儀/傾斜變化，即時改變光影位置
+        tiltEl.addEventListener("tiltChange", (event) => {
+            const x = event.detail.tiltX; // 範圍約 -15 到 15
+            const y = event.detail.tiltY;
+            
+            // 將角度映射為百分比 (0% - 100%)
+            const posX = ((x + 15) / 30) * 100;
+            const posY = ((y + 15) / 30) * 100;
+            
+            // 同時更新正反兩面的光影位置
+            frontSheen.style.backgroundPosition = `${posX}% ${posY}%`;
+            backSheen.style.backgroundPosition = `${posX}% ${posY}%`;
+        });
 
         function handleCardClick(event) {
             const card = document.getElementById('myCard');
-            const frontSheen = document.getElementById('frontSheen');
-            const backSheen = document.getElementById('backSheen');
             const rect = card.getBoundingClientRect();
             const clickX = event.clientX - rect.left;
             
-            // 點擊左半邊往右轉，點擊右半邊往左轉
             if (clickX < rect.width / 2) {
                 currentRotation -= 180; 
             } else {
@@ -143,15 +148,15 @@
 
             card.style.transform = `rotateY(${currentRotation}deg)`;
 
-            // 觸發金屬流光
-            frontSheen.classList.remove('sheen-active');
-            backSheen.classList.remove('sheen-active');
-            void frontSheen.offsetWidth; 
-            frontSheen.classList.add('sheen-active');
-            backSheen.classList.add('sheen-active');
-
+            // 請求 iOS 權限
             if (!permissionRequested && typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
                 DeviceOrientationEvent.requestPermission().then(res => { if (res == 'granted') permissionRequested = true; });
+            }
+        }
+
+        function requestPermission() {
+            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission().then(res => { if (res == 'granted') location.reload(); });
             }
         }
     </script>
