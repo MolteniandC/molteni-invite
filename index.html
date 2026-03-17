@@ -6,7 +6,7 @@
     <title>Molteni&C 新品發表會誠摯邀請您</title>
     <meta property="og:title" content="Molteni&C 新品發表會誠摯邀請您">
     <meta property="og:description" content="探索義大利頂級家具設計美學，誠摯邀請您的蒞臨。">
-    <meta property="og:image" content="https://drive.google.com/thumbnail?id=1Mu-dOU4P2hTElyyQnwyqN7KGf5RQouoq&sz=w1000">
+    <meta property="og:image" content="https://drive.google.com/thumbnail?id=1lMKH8uIRg_9PfNW7S-MjyI7lGBXlAxZG&sz=w1000">
     <style>
         body { 
             margin: 0; padding: 0; height: 100vh; 
@@ -25,71 +25,56 @@
 
         .card-flipper { 
             position: relative; width: 100%; height: 100%; 
+            /* 單向旋轉過場時間與曲線 */
             transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
             transform-style: preserve-3d; cursor: pointer; 
         }
         
-        .flipped { transform: rotateY(180deg); }
-        
-        /* 修改：加入厚度與邊緣感的核心樣式 */
         .card-front, .card-back { 
             position: absolute; width: 100%; height: 100%; 
             backface-visibility: hidden; border-radius: 20px; 
             overflow: hidden;
-            
-            /* 1. 加入微細的側邊邊框，強化實體感 */
-            border: 1px solid rgba(0,0,0,0.2);
-            box-sizing: border-box; /* 確保邊框不會撐大卡片 */
-            
-            /* 2. 重點：多重陰影堆疊技術 (模擬厚度) */
-            /* 第一層：最貼近卡片的細微陰影
-               第二、三層：緊密的深色陰影，模擬實體側邊
-               第四層：原本的大範圍模糊漂浮陰影
-            */
+            border: 1px solid rgba(0,0,0,0.1);
+            box-sizing: border-box;
+            /* 厚度感多重陰影 */
             box-shadow: 
                 0 1px 1px rgba(0,0,0,0.15), 
                 0 2px 2px rgba(0,0,0,0.15), 
                 0 4px 4px rgba(0,0,0,0.15), 
                 0 8px 8px rgba(0,0,0,0.15),
-                0 30px 60px rgba(0,0,0,0.7); /* 原本的漂浮陰影 */
+                0 30px 60px rgba(0,0,0,0.7);
         }
 
-        /* 正面樣式 */
         .card-front { 
-            background-image: url('https://drive.google.com/thumbnail?id=1Mu-dOU4P2hTElyyQnwyqN7KGf5RQouoq&sz=w1000'); 
+            /* 已更新為最新圖片 ID */
+            background-image: url('https://drive.google.com/thumbnail?id=1lMKH8uIRg_9PfNW7S-MjyI7lGBXlAxZG&sz=w1000'); 
             background-size: cover; background-position: center; 
             display: flex; align-items: flex-end; justify-content: center;
         }
 
         .flip-hint { 
             margin-bottom: 20px; padding: 7px 18px; 
-            background: rgba(220, 20, 60, 0.6); 
+            background: rgba(196, 0, 0, 0.9); /* 紅色透明提示 */
             color: rgba(255,255,255,0.95); 
             font-size: 14px; border-radius: 20px; 
             backdrop-filter: blur(5px); pointer-events: none;
         }
 
-        /* 背面樣式：配色 #f2f0eb */
         .card-back { 
-            background-color: #f2f0eb; transform: rotateY(180deg); 
+            background-color: #f2f0eb; 
+            transform: rotateY(180deg); 
             display: flex; flex-direction: column; justify-content: center; align-items: center; 
             padding: 25px; box-sizing: border-box; text-align: center; 
         }
         
         .card-back .date-row { 
-            color: #666; 
-            font-size: 16px; 
-            letter-spacing: 1px;
-            margin-bottom: 5px; 
-            font-weight: 500;
+            color: #666; font-size: 16px; letter-spacing: 1px;
+            margin-bottom: 5px; font-weight: 500;
         }
         
         .card-back h2 { 
-            color: #3a1b1b; 
-            margin-top: 5px; 
-            margin-bottom: 12px; 
-            font-weight: 600; 
-            font-size: 22px; 
+            color: #3a1b1b; margin-top: 5px; margin-bottom: 12px; 
+            font-weight: 600; font-size: 22px; 
         }
         
         .card-back p { color: #000000; margin: 6px 0; font-size: 16px; font-weight: 500; }
@@ -113,14 +98,11 @@
 
     <div class="tilt-wrapper" data-tilt data-tilt-gyroscope="true" data-tilt-max="12">
         <div class="card-flipper" id="myCard" onclick="handleCardClick(event)">
-            
             <div class="card-front">
                 <div class="flip-hint">點擊查看詳情</div>
             </div>
-
             <div class="card-back">
                 <div class="date-row">4/9、4/10</div>
-                
                 <h2>誠摯邀請</h2>
                 <p>Molteni&C 新品發表會</p>
                 <p style="font-size: 14px; color: #666; margin-top: 10px;">探索義大利經典設計</p>
@@ -135,8 +117,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
     <script>
         let permissionRequested = false;
+        let currentRotation = 0;
+
         function handleCardClick(event) {
-            document.getElementById('myCard').classList.toggle('flipped');
+            currentRotation += 180;
+            document.getElementById('myCard').style.transform = `rotateY(${currentRotation}deg)`;
+            
             if (!permissionRequested && typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
                 DeviceOrientationEvent.requestPermission().then(res => { 
                     if (res == 'granted') permissionRequested = true; 
