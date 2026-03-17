@@ -54,7 +54,7 @@
 
         .flip-hint { 
             margin-bottom: 20px; padding: 7px 18px; 
-            background: rgba(196, 0, 0, 0.9); /* 紅色透明提示 */
+            background: rgba(193, 0, 0, 0.9); /* 紅色透明提示 */
             color: rgba(255,255,255,0.95); 
             font-size: 14px; border-radius: 20px; 
             backdrop-filter: blur(5px); pointer-events: none;
@@ -120,7 +120,7 @@
         let currentRotation = 0;
 
         function handleCardClick(event) {
-            currentRotation += 180;
+            currentRotation += -180;
             document.getElementById('myCard').style.transform = `rotateY(${currentRotation}deg)`;
             
             if (!permissionRequested && typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
