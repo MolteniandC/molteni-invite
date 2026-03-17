@@ -28,11 +28,12 @@
             border-radius: 20px;
         }
         
+        /* 核心隔離邏輯 */
         .card-front, .card-back { 
             position: absolute; width: 100%; height: 100%; 
             backface-visibility: hidden !important;
             -webkit-backface-visibility: hidden !important;
-            border-radius: 20px; overflow: hidden; /* 確保內容不超出圓角 */
+            border-radius: 20px; overflow: hidden; 
             border: 1px solid rgba(255,255,255,0.1); box-sizing: border-box;
             transform-style: preserve-3d;
         }
@@ -44,7 +45,7 @@
             transform: rotateY(0deg) translateZ(1px); z-index: 2;
         }
 
-        /* 修正重點：固定大小 100%，不超出父元素 */
+        /* 修正：金屬流光固定於內部，不溢出 */
         .metal-sheen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(135deg, 
@@ -52,11 +53,9 @@
                 rgba(255,255,255,0.45) 50%, 
                 rgba(255,255,255,0) 65%
             );
-            background-size: 300% 300%; /* 加大背景尺寸供移動 */
-            background-position: 50% 50%;
+            background-size: 300% 300%; background-position: 50% 50%;
             mix-blend-mode: overlay; pointer-events: none;
-            transform: translateZ(5px); /* 稍微墊高，但不要太高防止穿透 */
-            z-index: 5;
+            transform: translateZ(5px); z-index: 5;
             border-radius: 20px;
         }
 
@@ -64,7 +63,7 @@
             margin-bottom: 25px; padding: 8px 20px; 
             background: #3a1b1b; color: #ffffff; 
             font-size: 14px; border-radius: 20px; 
-            transform: translateZ(30px); /* 保持適中高度 */
+            transform: translateZ(30px);
         }
 
         .card-back { 
@@ -83,11 +82,19 @@
         h2 { color: #3a1b1b; margin-top: 5px; margin-bottom: 12px; font-weight: 600; font-size: 22px; }
         p { color: #000000; margin: 6px 0; font-size: 16px; font-weight: 500; }
 
+        /* 修正重點：地圖按鈕層級拉到最高，並確保可被點擊 */
         .map-btn { 
-            margin-top: 30px; padding: 12px 40px; background-color: #000000; color: #ffffff; 
-            text-decoration: none; border-radius: 30px; font-weight: bold; transition: 0.3s;
-            transform: translateZ(40px);
+            margin-top: 30px; padding: 12px 40px; 
+            background-color: #000000; color: #ffffff; 
+            text-decoration: none; border-radius: 30px; 
+            font-weight: bold; transition: 0.3s;
+            position: relative; 
+            display: inline-block;
+            z-index: 99; /* 確保在所有層級之上 */
+            transform: translateZ(80px); /* 在 3D 空間中推向最前方 */
+            pointer-events: auto !important; /* 強制啟動點擊事件 */
         }
+        .map-btn:hover { background-color: #333; transform: translateZ(85px) scale(1.05); }
 
         #motion-btn { margin-top: 30px; background: none; color: #444; border: 1px solid #333; padding: 5px 12px; border-radius: 20px; font-size: 11px; cursor: pointer; opacity: 0.6; }
     </style>
@@ -107,7 +114,7 @@
                     <h2>誠摯邀請</h2>
                     <p>Molteni&C 新品發表會</p>
                     <p style="font-size: 14px; color: #666; margin-top: 10px;">探索義大利經典設計</p>
-                    <a href="https://maps.app.goo.gl/yS3E1P5SUpYpYJpS91" target="_blank" class="map-btn" onclick="event.stopPropagation();">📍 開啟地圖導航</a>
+                    <a href="https://www.google.com/maps/dir/?api=1&destination=Molteni%26C+Taichung" target="_blank" class="map-btn" onclick="event.stopPropagation();">📍 開啟地圖導航</a>
                     <p style="font-size: 11px; color: #999; margin-top: 25px;">(點擊卡片再次翻轉)</p>
                 </div>
             </div>
@@ -124,20 +131,20 @@
         const backSheen = document.getElementById('backSheen');
         const tiltEl = document.getElementById('tiltEl');
 
-        // 修改重點：不再 translate 層級，改為移動 backgroundPosition
+        // 控制光影隨手機傾斜流動
         tiltEl.addEventListener("tiltChange", (event) => {
-            const x = event.detail.tiltX; // -15 to 15
+            const x = event.detail.tiltX; 
             const y = event.detail.tiltY;
-            
-            // 計算百分比，讓背景在容器內滑動
             const posX = 50 + (x * 2.5); 
             const posY = 50 + (y * 2.5);
-            
             frontSheen.style.backgroundPosition = `${posX}% ${posY}%`;
             backSheen.style.backgroundPosition = `${posX}% ${posY}%`;
         });
 
         function handleCardClick(event) {
+            // 避免點擊按鈕時觸發卡片翻轉
+            if (event.target.classList.contains('map-btn')) return;
+
             const card = document.getElementById('myCard');
             const rect = card.getBoundingClientRect();
             const clickX = event.clientX - rect.left;
