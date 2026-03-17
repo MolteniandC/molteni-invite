@@ -17,8 +17,7 @@
         }
 
         .tilt-wrapper { 
-            width: 90vw; max-width: 350px; aspect-ratio: 1 / 1.5; 
-            perspective: 2000px; /* 加大景深，減少邊緣畸變 */
+            width: 90vw; max-width: 350px; aspect-ratio: 1 / 1.5; perspective: 2000px;
         }
 
         .card-flipper { 
@@ -29,59 +28,55 @@
             border-radius: 20px;
         }
         
-        /* 物理隔離核心：確保正反面內容完全不穿透 */
         .card-front, .card-back { 
             position: absolute; width: 100%; height: 100%; 
             backface-visibility: hidden !important;
             -webkit-backface-visibility: hidden !important;
-            border-radius: 20px; overflow: hidden; 
+            border-radius: 20px; overflow: hidden; /* 確保內容不超出圓角 */
             border: 1px solid rgba(255,255,255,0.1); box-sizing: border-box;
             transform-style: preserve-3d;
         }
 
-        /* 正面 */
         .card-front { 
             background-image: url('https://drive.google.com/thumbnail?id=1lMKH8uIRg_9PfNW7S-MjyI7lGBXlAxZG&sz=w1000'); 
             background-size: cover; background-position: center; 
             display: flex; align-items: flex-end; justify-content: center;
-            transform: rotateY(0deg) translateZ(1px); /* 墊高 1px */
-            z-index: 2;
+            transform: rotateY(0deg) translateZ(1px); z-index: 2;
         }
 
-        /* 改良：金屬流光層 (不再是黑色，是銀白高光) */
+        /* 修正重點：固定大小 100%，不超出父元素 */
         .metal-sheen {
-            position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            /* 模擬一道強烈的高光束 */
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(135deg, 
-                rgba(255,255,255,0) 30%, 
-                rgba(255,255,255,0.4) 50%, 
-                rgba(255,255,255,0) 70%
+                rgba(255,255,255,0) 35%, 
+                rgba(255,255,255,0.45) 50%, 
+                rgba(255,255,255,0) 65%
             );
-            mix-blend-mode: overlay; /* 關鍵：融入底下圖片 */
-            pointer-events: none;
-            transform: translateZ(10px); /* 讓光浮在圖片上方，增加立體感 */
+            background-size: 300% 300%; /* 加大背景尺寸供移動 */
+            background-position: 50% 50%;
+            mix-blend-mode: overlay; pointer-events: none;
+            transform: translateZ(5px); /* 稍微墊高，但不要太高防止穿透 */
             z-index: 5;
+            border-radius: 20px;
         }
 
         .flip-hint { 
             margin-bottom: 25px; padding: 8px 20px; 
             background: #3a1b1b; color: #ffffff; 
             font-size: 14px; border-radius: 20px; 
-            transform: translateZ(50px); /* 遠離卡面，絕對不會被穿透 */
+            transform: translateZ(30px); /* 保持適中高度 */
         }
 
-        /* 背面 */
         .card-back { 
             background-color: #f2f0eb; 
-            transform: rotateY(180deg) translateZ(1px);
-            z-index: 1;
+            transform: rotateY(180deg) translateZ(1px); z-index: 1;
         }
 
         .back-content {
             width: 100%; height: 100%;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             padding: 30px; box-sizing: border-box; text-align: center;
-            transform: translateZ(30px); /* 背面文字墊高，防止被背面光影壓住 */
+            transform: translateZ(20px);
         }
 
         .date-row { color: #666; font-size: 16px; letter-spacing: 1px; margin-bottom: 5px; font-weight: 500; }
@@ -91,7 +86,7 @@
         .map-btn { 
             margin-top: 30px; padding: 12px 40px; background-color: #000000; color: #ffffff; 
             text-decoration: none; border-radius: 30px; font-weight: bold; transition: 0.3s;
-            transform: translateZ(60px); /* 地圖按鈕推向最前端 */
+            transform: translateZ(40px);
         }
 
         #motion-btn { margin-top: 30px; background: none; color: #444; border: 1px solid #333; padding: 5px 12px; border-radius: 20px; font-size: 11px; cursor: pointer; opacity: 0.6; }
@@ -112,7 +107,7 @@
                     <h2>誠摯邀請</h2>
                     <p>Molteni&C 新品發表會</p>
                     <p style="font-size: 14px; color: #666; margin-top: 10px;">探索義大利經典設計</p>
-                    <a href="maps.google.com/8" target="_blank" class="map-btn" onclick="event.stopPropagation();">📍 開啟地圖導航</a>
+                    <a href="https://maps.app.goo.gl/yS3E1P5SUpYpYJpS91" target="_blank" class="map-btn" onclick="event.stopPropagation();">📍 開啟地圖導航</a>
                     <p style="font-size: 11px; color: #999; margin-top: 25px;">(點擊卡片再次翻轉)</p>
                 </div>
             </div>
@@ -129,17 +124,17 @@
         const backSheen = document.getElementById('backSheen');
         const tiltEl = document.getElementById('tiltEl');
 
-        // 改良：使用 transform: translate 實作更流暢的光影位移
+        // 修改重點：不再 translate 層級，改為移動 backgroundPosition
         tiltEl.addEventListener("tiltChange", (event) => {
             const x = event.detail.tiltX; // -15 to 15
             const y = event.detail.tiltY;
             
-            // 讓光束隨著傾斜方向大幅度位移
-            const moveX = x * 3; 
-            const moveY = y * 3;
+            // 計算百分比，讓背景在容器內滑動
+            const posX = 50 + (x * 2.5); 
+            const posY = 50 + (y * 2.5);
             
-            frontSheen.style.transform = `translateZ(10px) translate(${moveX}%, ${moveY}%)`;
-            backSheen.style.transform = `translateZ(10px) translate(${moveX}%, ${moveY}%)`;
+            frontSheen.style.backgroundPosition = `${posX}% ${posY}%`;
+            backSheen.style.backgroundPosition = `${posX}% ${posY}%`;
         });
 
         function handleCardClick(event) {
@@ -152,7 +147,6 @@
             } else {
                 currentRotation += 180; 
             }
-
             card.style.transform = `rotateY(${currentRotation}deg)`;
 
             if (!permissionRequested && typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
