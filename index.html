@@ -17,51 +17,60 @@
         }
 
         .tilt-wrapper { 
-            width: 90vw; max-width: 350px; aspect-ratio: 1 / 1.5; perspective: 1500px;
+            width: 90vw; max-width: 350px; aspect-ratio: 1 / 1.5; 
+            perspective: 2000px; /* 加大景深，減少邊緣畸變 */
         }
 
         .card-flipper { 
             position: relative; width: 100%; height: 100%; 
             transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
             transform-style: preserve-3d; cursor: pointer; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
             border-radius: 20px;
         }
         
+        /* 物理隔離核心：確保正反面內容完全不穿透 */
         .card-front, .card-back { 
             position: absolute; width: 100%; height: 100%; 
-            backface-visibility: hidden; -webkit-backface-visibility: hidden; 
+            backface-visibility: hidden !important;
+            -webkit-backface-visibility: hidden !important;
             border-radius: 20px; overflow: hidden; 
-            border: 1px solid rgba(0,0,0,0.1); box-sizing: border-box;
+            border: 1px solid rgba(255,255,255,0.1); box-sizing: border-box;
             transform-style: preserve-3d;
         }
 
+        /* 正面 */
         .card-front { 
             background-image: url('https://drive.google.com/thumbnail?id=1lMKH8uIRg_9PfNW7S-MjyI7lGBXlAxZG&sz=w1000'); 
             background-size: cover; background-position: center; 
             display: flex; align-items: flex-end; justify-content: center;
-            transform: rotateY(0deg) translateZ(1px);
+            transform: rotateY(0deg) translateZ(1px); /* 墊高 1px */
             z-index: 2;
         }
 
-        /* 改良版：金屬流光層 (預設顯示，由 JS 控制位置) */
+        /* 改良：金屬流光層 (不再是黑色，是銀白高光) */
         .metal-sheen {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 60%, rgba(255,255,255,0) 100%);
-            background-size: 300% 300%;
-            background-position: 50% 50%;
-            mix-blend-mode: overlay; pointer-events: none;
-            opacity: 0.8; /* 始終保持一點點光澤感 */
-            z-index: 1;
+            position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            /* 模擬一道強烈的高光束 */
+            background: linear-gradient(135deg, 
+                rgba(255,255,255,0) 30%, 
+                rgba(255,255,255,0.4) 50%, 
+                rgba(255,255,255,0) 70%
+            );
+            mix-blend-mode: overlay; /* 關鍵：融入底下圖片 */
+            pointer-events: none;
+            transform: translateZ(10px); /* 讓光浮在圖片上方，增加立體感 */
+            z-index: 5;
         }
 
         .flip-hint { 
-            margin-bottom: 25px; padding: 8px 20px; background: #3a1b1b; color: #ffffff; 
-            font-size: 14px; border-radius: 20px; pointer-events: none;
-            transform: translateZ(15px); /* 確保提示框浮出，不被殘影影響 */
-            backface-visibility: hidden; -webkit-backface-visibility: hidden;
+            margin-bottom: 25px; padding: 8px 20px; 
+            background: #3a1b1b; color: #ffffff; 
+            font-size: 14px; border-radius: 20px; 
+            transform: translateZ(50px); /* 遠離卡面，絕對不會被穿透 */
         }
 
+        /* 背面 */
         .card-back { 
             background-color: #f2f0eb; 
             transform: rotateY(180deg) translateZ(1px);
@@ -72,8 +81,7 @@
             width: 100%; height: 100%;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             padding: 30px; box-sizing: border-box; text-align: center;
-            transform: translateZ(10px);
-            backface-visibility: hidden; -webkit-backface-visibility: hidden;
+            transform: translateZ(30px); /* 背面文字墊高，防止被背面光影壓住 */
         }
 
         .date-row { color: #666; font-size: 16px; letter-spacing: 1px; margin-bottom: 5px; font-weight: 500; }
@@ -83,7 +91,7 @@
         .map-btn { 
             margin-top: 30px; padding: 12px 40px; background-color: #000000; color: #ffffff; 
             text-decoration: none; border-radius: 30px; font-weight: bold; transition: 0.3s;
-            position: relative; z-index: 20; transform: translateZ(15px);
+            transform: translateZ(60px); /* 地圖按鈕推向最前端 */
         }
 
         #motion-btn { margin-top: 30px; background: none; color: #444; border: 1px solid #333; padding: 5px 12px; border-radius: 20px; font-size: 11px; cursor: pointer; opacity: 0.6; }
@@ -91,7 +99,7 @@
 </head>
 <body>
 
-    <div id="tiltEl" class="tilt-wrapper" data-tilt data-tilt-gyroscope="true" data-tilt-max="15">
+    <div id="tiltEl" class="tilt-wrapper" data-tilt data-tilt-gyroscope="true" data-tilt-max="15" data-tilt-speed="400">
         <div class="card-flipper" id="myCard" onclick="handleCardClick(event)">
             <div class="card-front">
                 <div class="metal-sheen" id="frontSheen"></div>
@@ -104,7 +112,7 @@
                     <h2>誠摯邀請</h2>
                     <p>Molteni&C 新品發表會</p>
                     <p style="font-size: 14px; color: #666; margin-top: 10px;">探索義大利經典設計</p>
-                    <a href="https://www.google.com/maps/search/?api=1&query=Molteni%26C+Taichung" target="_blank" class="map-btn" onclick="event.stopPropagation();">📍 開啟地圖導航</a>
+                    <a href="maps.google.com/8" target="_blank" class="map-btn" onclick="event.stopPropagation();">📍 開啟地圖導航</a>
                     <p style="font-size: 11px; color: #999; margin-top: 25px;">(點擊卡片再次翻轉)</p>
                 </div>
             </div>
@@ -121,18 +129,17 @@
         const backSheen = document.getElementById('backSheen');
         const tiltEl = document.getElementById('tiltEl');
 
-        // 監聽陀螺儀/傾斜變化，即時改變光影位置
+        // 改良：使用 transform: translate 實作更流暢的光影位移
         tiltEl.addEventListener("tiltChange", (event) => {
-            const x = event.detail.tiltX; // 範圍約 -15 到 15
+            const x = event.detail.tiltX; // -15 to 15
             const y = event.detail.tiltY;
             
-            // 將角度映射為百分比 (0% - 100%)
-            const posX = ((x + 15) / 30) * 100;
-            const posY = ((y + 15) / 30) * 100;
+            // 讓光束隨著傾斜方向大幅度位移
+            const moveX = x * 3; 
+            const moveY = y * 3;
             
-            // 同時更新正反兩面的光影位置
-            frontSheen.style.backgroundPosition = `${posX}% ${posY}%`;
-            backSheen.style.backgroundPosition = `${posX}% ${posY}%`;
+            frontSheen.style.transform = `translateZ(10px) translate(${moveX}%, ${moveY}%)`;
+            backSheen.style.transform = `translateZ(10px) translate(${moveX}%, ${moveY}%)`;
         });
 
         function handleCardClick(event) {
@@ -148,7 +155,6 @@
 
             card.style.transform = `rotateY(${currentRotation}deg)`;
 
-            // 請求 iOS 權限
             if (!permissionRequested && typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
                 DeviceOrientationEvent.requestPermission().then(res => { if (res == 'granted') permissionRequested = true; });
             }
